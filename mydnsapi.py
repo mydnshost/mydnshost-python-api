@@ -4,20 +4,48 @@ import urllib.parse
 
 
 class MyDNSHostAPI:
+    """
+    API client for mydnshost.co.uk.
+    """
 
     def __init__(self, base_url=None, auth=None):
+        """Creates a new API client.
+
+        Args:
+            base_url: The base URL of the API to connect to.
+            auth: The authenticator to use for outgoing requests. May be changed later with `set_auth`.
+        """
         self.__base_url = base_url or 'https://api.mydnshost.co.uk/'
         self.__version = '1.0'
         self.__auth = auth
         self.__domain_admin = False
 
     def set_auth(self, auth: requests.auth.AuthBase):
+        """Changes the authenticator used for future requests.
+
+        Args:
+            auth: The new authenticator to use for outgoing requests.
+        """
         self.__auth = auth
 
     def valid_auth(self):
+        """
+        Performs a simple call to the API to determine if we can successfully authenticate.
+
+        Returns:
+            `True` if the call succeeded, `False` otherwise.
+        """
         return self.get_user_data() is not None
 
     def use_domain_admin(self, domain_admin):
+        """
+        Sets whether or not to use admin privileges when calling domain-related methods.
+
+        Using admin privileges allows admin clients to modify any domain regardless of their permission level.
+
+        Args:
+            domain_admin: `True` to use domain admin privileges, false otherwise.
+        """
         self.__domain_admin = domain_admin
 
     def get_user_data(self):
@@ -57,7 +85,7 @@ class MyDNSHostAPI:
         return self.__get('domains')
 
     def create_domain(self, domain, owner=None):
-        return self.__post('domains', {**{'domain': domain}, **({'owner': owner} if owner else {})})
+        return self.__post('domains', {'domain': domain, **({'owner': owner} if owner else {})})
 
     def delete_domain(self, domain):
         return self.__delete('domains/%s' % domain)
@@ -155,6 +183,13 @@ class IdImpersonatingAuthenticator(requests.auth.AuthBase):
     """Authenticator that impersonates another user by id."""
 
     def __init__(self, admin_auth: requests.auth.AuthBase, user_id):
+        """
+        Creates a new ID-based impersonating authenticator.
+
+        Args:
+            admin_auth: The authenticator that will authenticate us as an administrator.
+            user_id: The ID of the user to impersonate when making requests.
+        """
         self.__admin_auth = admin_auth
         self.__user_id = user_id
 
@@ -167,6 +202,13 @@ class EmailImpersonatingAuthenticator(requests.auth.AuthBase):
     """Authenticator that impersonates another user by email."""
 
     def __init__(self, admin_auth: requests.auth.AuthBase, email):
+        """
+        Creates a new email-based impersonating authenticator.
+
+        Args:
+            admin_auth: The authenticator that will authenticate us as an administrator.
+            email: The email address of the user to impersonate when making requests.
+        """
         self.__admin_auth = admin_auth
         self.__email = email
 
