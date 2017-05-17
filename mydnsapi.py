@@ -53,6 +53,51 @@ class MyDNSHostAPI:
     def get_session_id(self):
         return self.__get('session').get('session')
 
+    def get_domains(self):
+        return self.__get('domains')
+
+    def create_domain(self, domain, owner=None):
+        return self.__post('domains', {**{'domain': domain}, **({'owner': owner} if owner else {})})
+
+    def delete_domain(self, domain):
+        return self.__delete('domains/%s' % domain)
+
+    def get_domain_data(self, domain):
+        return self.__get('domains/%s' % domain)
+
+    def set_domain_data(self, domain, data):
+        return self.__post('domains/%s' % domain, data)
+
+    def get_domain_access(self, domain):
+        return self.__get('domains/%s/access' % domain).get('access')
+
+    def set_domain_access(self, domain, data):
+        return self.__post('domains/%s/access' % domain, data)
+
+    def sync_domain(self, domain):
+        return self.__get('domains/%s/sync' % domain)
+
+    def export_zone(self, domain):
+        return self.__get('domains/%s/export' % domain).get('zone')
+
+    def import_zone(self, domain, zone):
+        return self.__post('domains/%s/import' % domain, {'zone': zone})
+
+    def get_domain_records(self, domain):
+        return self.__get('domains/%s/records' % domain).get('records')
+
+    def get_domain_records_by_name(self, domain, name, r_type=None):
+        return self.__get('domains/%s/records/%s%s' % (domain, name, '/%s' % r_type if r_type else '')).get('records')
+
+    def set_domain_records(self, domain, data):
+        return self.__post('domains/%s/records' % domain, data)
+
+    def delete_domain_records(self, domain):
+        return self.__delete('domains/%s/records' % domain)
+
+    def delete_domain_records_by_name(self, domain, name, r_type=None):
+        return self.__delete('domains/%s/records/%s%s' % (domain, name, '/%s' % r_type if r_type else ''))
+
     def __get(self, api_method):
         return self.__request('GET', api_method)
 
