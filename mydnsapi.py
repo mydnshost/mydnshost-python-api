@@ -2,6 +2,7 @@ import requests
 import requests.auth
 import urllib.parse
 import argparse
+import os
 
 
 class MyDNSHostAPI:
@@ -219,8 +220,19 @@ class EmailImpersonatingAuthenticator(requests.auth.AuthBase):
 
 
 if __name__ == '__main__':
+
+    def get_authenticator():
+        if args.auth_user and args.auth_key:
+            return UserKeyAuthenticator(args.auth_user, args.auth_key)
+        elif 'MYDNSHOST_AUTH_USER' in os.environ and 'MYDNSHOST_AUTH_KEY' in os.environ:
+            return UserKeyAuthenticator(os.environ['MYDNSHOST_AUTH_USER'], os.environ['MYDNSHOST_AUTH_KEY'])
+        else:
+            parser.error('No authentication method specified.')
+
     parser = argparse.ArgumentParser(description='Client for interacting with mydnshost.co.uk')
-    parser.add_argument('--auth-api-key', help='API key to use to authenticate')
+    parser.add_argument('--auth-key', help='API key to use to authenticate')
+    parser.add_argument('--auth-user', help='Username to authenticate with')
+    parser.add_argument('--base-url', default='https://api.mydnshost.co.uk/', help='Base URL to send API requests to')
 
     top_sub_parsers = parser.add_subparsers(title='subcommands', dest='command')
     records_parser = top_sub_parsers.add_parser('records', help='Modify DNS records for a domain')
@@ -244,4 +256,17 @@ if __name__ == '__main__':
     records_list_parser.add_argument('name', help='Domain to list records for')
     records_list_parser.add_argument('type', help='Type of the records to list', nargs='?')
 
-    print(parser.parse_args())
+    args = parser.parse_args()
+    api = MyDNSHostAPI(base_url=args.base_url, auth=get_authenticator())
+
+    if not api.valid_auth():
+        parser.error('Invalid credentials')
+
+    if args.command == 'records':
+        pass
+    elif args.command == 'apikeys':
+        pass
+    elif args.command == 'domains':
+        pass
+    else:
+        parser.error('Specify a command')
