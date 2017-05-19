@@ -17,11 +17,32 @@ class BaseHandler:
         for name, (creator, _) in self.__subcommands.items():
             creator(subparsers, name)
 
-    def handle_command(self, api, args):
+    def handle_command(self, api: MyDNSHostAPI, args):
         if args.subcommand in self.__subcommands:
             self.__subcommands[args.subcommand][1](api, args)
         else:
             self.__parser.error('Please specify a subcommand.')
+
+    def find_domain(self, api: MyDNSHostAPI, subdomain):
+        """
+        Utility method to query the API and find the domain that contains the given subdomain.
+
+        This is accomplished by selecting all domains that match the end of the subdomain, and then selecting the
+        longest possible match.
+
+        For example, a subdomain of 'foo.bar.example.com' may match 'bar.example.com' and 'example.com' (but wouldn't
+        match 'r.example.com', as the matches must end on a separator); 'bar.example.com' is the longest, thus most
+        specific, and is returned.
+
+        Args:
+            api: The API client to use to query domains
+            subdomain: The name of the subdomain to find a matching domain for
+
+        Returns:
+            The best matching domain (as a string), or `None` if no domains matched.
+        """
+        matches = [d for d in api.get_domains().keys() if ('.%s' % subdomain).endswith('.%s' % d)]
+        return next(iter(sorted(matches, key=len, reverse=True)), None)
 
 
 class DomainsHandler(BaseHandler):
@@ -32,10 +53,16 @@ class DomainsHandler(BaseHandler):
         }, 'Modify domains associated with your account')
 
     def create_list_parser(self, subparsers, name):
-        subparsers.add_parser(name, help='List all domains')
+        parser = subparsers.add_parser(name, help='List all domains')
+        parser.add_argument('-p', '--show-permissions', action='store_true',
+                            help='Show what access level you have over each domain')
 
-    def handle_list_command(self, api, _):
-        print(api.get_domains())
+    def handle_list_command(self, api: MyDNSHostAPI, args):
+        for name, access in api.get_domains().items():
+            if args.show_permissions:
+                print('%s [%s]' % (name, access))
+            else:
+                print(name)
 
 
 class RecordsHandler(BaseHandler):
@@ -66,14 +93,25 @@ class RecordsHandler(BaseHandler):
         parser.add_argument('type', help='Type of the record to remove')
         parser.add_argument('content', help='Content of the record to remove', nargs='+')
 
-    def handle_list_command(self, api, args):
+    def handle_list_command(self, api: MyDNSHostAPI, args):
+        domain = self.find_domain(api, args.name)
+        name = args.name[:-len(domain)].strip('.')
+        records = list(self.__filter_records(api.get_domain_records(domain), name, args.type))
+        for record in records:
+            print('%s.%s %s %s [TTL %s]' % (record['name'], domain, record['type'], record['content'], record['ttl']))
+        if not records:
+            print('No records found.')
+
+    def handle_add_command(self, api: MyDNSHostAPI, args):
         pass
 
-    def handle_add_command(self, api, args):
+    def handle_remove_command(self, api: MyDNSHostAPI, args):
         pass
 
-    def handle_remove_command(self, api, args):
-        pass
+    def __filter_records(self, records, name, type):
+        for record in records:
+            if (not name or record['name'] == name) and (not type or record['type'] == type):
+                yield record
 
 
 def get_authenticator(args, error_handler):
