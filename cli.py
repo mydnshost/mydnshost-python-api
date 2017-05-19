@@ -78,6 +78,7 @@ class RecordsHandler(BaseHandler):
         parser = subparsers.add_parser(name, help='List existing records')
         parser.add_argument('name', help='Domain to list records for')
         parser.add_argument('type', help='Type of the records to list', nargs='?')
+        parser.add_argument('--show-ids', action='store_true', help='Show the internal IDs of records')
 
     def create_add_parser(self, subparsers, name):
         parser = subparsers.add_parser(name, help='Add a new record')
@@ -86,6 +87,7 @@ class RecordsHandler(BaseHandler):
         parser.add_argument('content', help='Content of the record to add', nargs='+')
         parser.add_argument('--ttl', help='The TTL for the record')
         parser.add_argument('--priority', help='The priority for the record')
+        parser.add_argument('--show-ids', action='store_true', help='Show the internal IDs of modified records')
 
     def create_remove_parser(self, subparsers, name):
         parser = subparsers.add_parser(name, help='Remove an existing record')
@@ -97,18 +99,35 @@ class RecordsHandler(BaseHandler):
         domain = self.find_domain(api, args.name)
         name = args.name[:-len(domain)].strip('.')
         records = list(self.__filter_records(api.get_domain_records(domain), name, args.type))
-        for record in records:
-            print('%s.%s %s %s [TTL %s]' % (record['name'], domain, record['type'], record['content'], record['ttl']))
+        self.__print_records(domain, records, args.show_ids)
         if not records:
             print('No records found.')
 
     def handle_add_command(self, api: MyDNSHostAPI, args):
-        pass
+        domain = self.find_domain(api, args.name)
+        name = args.name[:-len(domain)].strip('.')
+        # TODO: Add TTL and Priority if they're specified
+        records = [{'name': name, 'type': args.type, 'content': c} for c in args.content]
+        result = api.set_domain_records(domain, {'records': records})
+        if 'changed' in result and len(result['changed']):
+            print('Records created:')
+            # TODO: The names in this response are actually fully qualified, so we render them incorrectly.
+            self.__print_records(domain, result['changed'], args.show_ids)
+        else:
+            print('No records created.')
 
     def handle_remove_command(self, api: MyDNSHostAPI, args):
         pass
 
-    def __filter_records(self, records, name, type):
+    @staticmethod
+    def __print_records(domain, records, show_ids=False):
+        for record in records:
+            name = '%s.%s' % (record['name'], domain) if len(record['name']) else domain
+            print('%s%s %s %s [TTL %s]' % ('%s: ' % record['id'] if show_ids else '', name,
+                                              record['type'], record['content'], record['ttl']))
+
+    @staticmethod
+    def __filter_records(records, name, type):
         for record in records:
             if (not name or record['name'] == name) and (not type or record['type'] == type):
                 yield record
