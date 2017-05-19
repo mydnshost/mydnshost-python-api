@@ -1,8 +1,6 @@
 import requests
 import requests.auth
 import urllib.parse
-import argparse
-import os
 
 
 class MyDNSHostAPI:
@@ -217,56 +215,3 @@ class EmailImpersonatingAuthenticator(requests.auth.AuthBase):
     def __call__(self, r):
         r.headers['X-IMPERSONATE'] = self.__email
         return self.__admin_auth.__call__(r)
-
-
-if __name__ == '__main__':
-
-    def get_authenticator():
-        if args.auth_user and args.auth_key:
-            return UserKeyAuthenticator(args.auth_user, args.auth_key)
-        elif 'MYDNSHOST_AUTH_USER' in os.environ and 'MYDNSHOST_AUTH_KEY' in os.environ:
-            return UserKeyAuthenticator(os.environ['MYDNSHOST_AUTH_USER'], os.environ['MYDNSHOST_AUTH_KEY'])
-        else:
-            parser.error('No authentication method specified.')
-
-    parser = argparse.ArgumentParser(description='Client for interacting with mydnshost.co.uk')
-    parser.add_argument('--auth-key', help='API key to use to authenticate')
-    parser.add_argument('--auth-user', help='Username to authenticate with')
-    parser.add_argument('--base-url', default='https://api.mydnshost.co.uk/', help='Base URL to send API requests to')
-
-    top_sub_parsers = parser.add_subparsers(title='subcommands', dest='command')
-    records_parser = top_sub_parsers.add_parser('records', help='Modify DNS records for a domain')
-    apikeys_parser = top_sub_parsers.add_parser('apikeys', help='Modify API keys for your account')
-    domains_parser = top_sub_parsers.add_parser('domains', help='Modify domains associated with your account')
-
-    records_sub_parser = records_parser.add_subparsers(title='subcommands', dest='subcommand')
-    records_rm_parser = records_sub_parser.add_parser('rm', help='Remove an existing record')
-    records_rm_parser.add_argument('name', help='FQDN of the record to remove')
-    records_rm_parser.add_argument('type', help='Type of the record to remove')
-    records_rm_parser.add_argument('content', help='Content of the record to remove', nargs='+')
-
-    records_add_parser = records_sub_parser.add_parser('add', help='Add a new record')
-    records_add_parser.add_argument('name', help='FQDN of the record to add')
-    records_add_parser.add_argument('type', help='Type of the record to add')
-    records_add_parser.add_argument('content', help='Content of the record to add', nargs='+')
-    records_add_parser.add_argument('--ttl', help='The TTL for the record')
-    records_add_parser.add_argument('--priority', help='The priority for the record')
-
-    records_list_parser = records_sub_parser.add_parser('list', help='List existing records')
-    records_list_parser.add_argument('name', help='Domain to list records for')
-    records_list_parser.add_argument('type', help='Type of the records to list', nargs='?')
-
-    args = parser.parse_args()
-    api = MyDNSHostAPI(base_url=args.base_url, auth=get_authenticator())
-
-    if not api.valid_auth():
-        parser.error('Invalid credentials')
-
-    if args.command == 'records':
-        pass
-    elif args.command == 'apikeys':
-        pass
-    elif args.command == 'domains':
-        pass
-    else:
-        parser.error('Specify a command')
