@@ -92,8 +92,8 @@ class RecordsHandler(BaseHandler):
     def create_remove_parser(self, subparsers, name):
         parser = subparsers.add_parser(name, help='Remove an existing record')
         parser.add_argument('name', help='FQDN of the record to remove')
-        parser.add_argument('type', help='Type of the record to remove')
-        parser.add_argument('content', help='Content of the record to remove', nargs='+')
+        parser.add_argument('type', help='Type of the record to remove', nargs='?')
+        parser.add_argument('content', help='Content of the record to remove', nargs='*')
 
     def handle_list_command(self, api: MyDNSHostAPI, args):
         domain = self.find_domain(api, args.name)
@@ -106,30 +106,52 @@ class RecordsHandler(BaseHandler):
     def handle_add_command(self, api: MyDNSHostAPI, args):
         domain = self.find_domain(api, args.name)
         name = args.name[:-len(domain)].strip('.')
-        # TODO: Add TTL and Priority if they're specified
-        records = [{'name': name, 'type': args.type, 'content': c} for c in args.content]
+        extras = {**({'ttl': args.ttl} if args.ttl else {}), **({'priority': args.priority} if args.priority else {})}
+        records = [{'name': name, 'type': args.type, 'content': c, **extras} for c in args.content]
+        print(records)
         result = api.set_domain_records(domain, {'records': records})
         if 'changed' in result and len(result['changed']):
             print('Records created:')
-            # TODO: The names in this response are actually fully qualified, so we render them incorrectly.
             self.__print_records(domain, result['changed'], args.show_ids)
         else:
             print('No records created.')
 
     def handle_remove_command(self, api: MyDNSHostAPI, args):
-        pass
+        domain = self.find_domain(api, args.name)
+        name = args.name[:-len(domain)].strip('.')
+        records = [{'id': record['id'], 'delete': True} for record in
+                   self.__filter_records(api.get_domain_records(domain), name, args.type, args.content)]
+        result = api.set_domain_records(domain, {'records': records})
+        if 'changed' in result and len(result['changed']):
+            print('%s records deleted.' % len(result['changed']))
+        else:
+            print('No records deleted.')
 
     @staticmethod
     def __print_records(domain, records, show_ids=False):
         for record in records:
             name = '%s.%s' % (record['name'], domain) if len(record['name']) else domain
             print('%s%s %s %s [TTL %s]' % ('%s: ' % record['id'] if show_ids else '', name,
-                                              record['type'], record['content'], record['ttl']))
+                                           record['type'], record['content'], record['ttl']))
 
     @staticmethod
-    def __filter_records(records, name, type):
+    def __filter_records(records, name = None, type = None, content = None):
+        """
+        Filters a list of records based on their name, type or content.
+
+        Args:
+            records: The records to be filtered
+            name: The name of the record to select (or `None` for any)
+            type: The type of record to select (or `None` for any)
+            content: A list of content values to select (or `None` for any)
+
+        Returns:
+            The input list, filtered according to the given arguments
+        """
         for record in records:
-            if (not name or record['name'] == name) and (not type or record['type'] == type):
+            if ((not name or record['name'] == name) and
+                    (not type or record['type'] == type) and
+                    (not content or record['content'] in content)):
                 yield record
 
 
