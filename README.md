@@ -8,8 +8,34 @@ This implements version 1.0 of the API as documented at https://api.mydnshost.co
 
 ### Basic usage
 
+Creating two new AAAA records:
+
 ```
-mydnsapi records {list|add|rm} [--ttl N] [--priority N] fqdn.example.com AAAA fdda:5cc1:23:4::1f
+mydnsapi records add fqdn.example.com AAAA fdda:5cc1:23:4::1f fdda:5cc1:23:4::10
+```
+
+Using a custom TTL:
+
+```
+mydnsapi records add fqdn.example.com A 8.8.8.8 --ttl 1440
+```
+
+Listing records:
+
+```
+mydnsapi records list fqdn.example.com
+```
+
+Deleting all records for a subdomain:
+
+```
+mydnsapi records rm fqdn.example.com
+```
+
+Deleting two specific AAAA records:
+
+```
+mydnsapi records add fqdn.example.com AAAA fdda:5cc1:23:4::1f fdda:5cc1:23:4::10
 ```
 
 ### Authentication

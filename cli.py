@@ -108,7 +108,6 @@ class RecordsHandler(BaseHandler):
         name = args.name[:-len(domain)].strip('.')
         extras = {**({'ttl': args.ttl} if args.ttl else {}), **({'priority': args.priority} if args.priority else {})}
         records = [{'name': name, 'type': args.type, 'content': c, **extras} for c in args.content]
-        print(records)
         result = api.set_domain_records(domain, {'records': records})
         if 'changed' in result and len(result['changed']):
             print('Records created:')
@@ -135,7 +134,7 @@ class RecordsHandler(BaseHandler):
                                            record['type'], record['content'], record['ttl']))
 
     @staticmethod
-    def __filter_records(records, name = None, type = None, content = None):
+    def __filter_records(records, name=None, type=None, content=None):
         """
         Filters a list of records based on their name, type or content.
 
@@ -156,6 +155,19 @@ class RecordsHandler(BaseHandler):
 
 
 def get_authenticator(args, error_handler):
+    """
+    Constructs an authenticator to use when connecting to the API.
+
+    Preference is given to credentials passed on the command line; if none are specified then environment variables
+    are checked.
+
+    Args:
+        args: The top-level command line arguments passed by the user .
+        error_handler: The function to call if an error occurs (e.g. credentials not present).
+
+    Returns:
+        An authenticator object to use (unless `error_handler` was invoked).
+    """
     if args.auth_user and args.auth_key:
         return UserKeyAuthenticator(args.auth_user, args.auth_key)
     elif 'MYDNSHOST_AUTH_USER' in os.environ and 'MYDNSHOST_AUTH_KEY' in os.environ:
@@ -163,7 +175,9 @@ def get_authenticator(args, error_handler):
     else:
         error_handler('No authentication method specified.')
 
-if __name__ == '__main__':
+
+def main():
+    """CLI entry point."""
     parser = argparse.ArgumentParser(description='Client for interacting with mydnshost.co.uk')
     parser.add_argument('--auth-key', help='API key to use to authenticate')
     parser.add_argument('--auth-user', help='Username to authenticate with')
@@ -188,3 +202,6 @@ if __name__ == '__main__':
         commands[args.command].handle_command(api, args)
     else:
         parser.error('Specify a command')
+
+if __name__ == '__main__':
+    main()
