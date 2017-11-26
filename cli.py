@@ -41,7 +41,7 @@ class BaseHandler:
         Returns:
             The best matching domain (as a string), or `None` if no domains matched.
         """
-        matches = [d for d in api.get_domains().keys() if ('.%s' % subdomain).endswith('.%s' % d)]
+        matches = [d for d in api.get_domains().keys() if ('.%s' % subdomain.strip('.')).endswith('.%s' % d)]
         return next(iter(sorted(matches, key=len, reverse=True)), None)
 
 
