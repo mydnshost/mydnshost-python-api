@@ -36,7 +36,7 @@ setup(
 
     py_modules=["api", "cli"],
 
-    install_requires=[],
+    install_requires=["requests"],
 
     entry_points={
         'console_scripts': [
