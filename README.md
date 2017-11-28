@@ -9,11 +9,10 @@ This implements version 1.0 of the API as documented at https://api.mydnshost.co
 To install the latest version from git:
 
 ```
-    $ pip install --upgrade git+https://github.com/mydnshost/mydnshost-python-api.git
+    $ pip3 install --upgrade git+https://github.com/mydnshost/mydnshost-python-api.git
 ```
 
-Note that this tool requires Python 3, so you may need to use `pip3` in place
-of `pip` depending on your system configuration.
+Note that this tool requires Python 3.
 
 ## Command line
 
