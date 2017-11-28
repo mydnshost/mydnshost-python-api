@@ -36,7 +36,7 @@ setup(
 
     py_modules=["api", "cli"],
 
-    install_requires=["requests"],
+    install_requires=["requests[security]"],
 
     entry_points={
         'console_scripts': [
