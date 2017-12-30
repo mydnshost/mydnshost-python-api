@@ -115,7 +115,7 @@ class MyDNSHostAPI:
         return self.__get('domains/%s/records' % domain).get('records')
 
     def get_domain_records_by_name(self, domain, name, r_type=None):
-        return self.__get('domains/%s/records/%s%s' % (domain, name, '/%s' % r_type if r_type else '')).get('records')
+        return self.__get('domains/%s/record/%s%s' % (domain, name, '/%s' % r_type if r_type else '')).get('records')
 
     def set_domain_records(self, domain, data):
         return self.__post('domains/%s/records' % domain, data)
@@ -124,7 +124,7 @@ class MyDNSHostAPI:
         return self.__delete('domains/%s/records' % domain)
 
     def delete_domain_records_by_name(self, domain, name, r_type=None):
-        return self.__delete('domains/%s/records/%s%s' % (domain, name, '/%s' % r_type if r_type else ''))
+        return self.__delete('domains/%s/record/%s%s' % (domain, name, '/%s' % r_type if r_type else ''))
 
     def __get(self, api_method):
         return self.__request('GET', api_method)
