@@ -6,6 +6,8 @@ This implements version 1.0 of the API as documented at https://api.mydnshost.co
 
 ## Installation
 
+### Using pip
+
 To install the latest version from git:
 
 ```
@@ -13,6 +15,14 @@ To install the latest version from git:
 ```
 
 Note that this tool requires Python 3.
+
+### Using docker
+
+To run using docker, simply:
+
+```
+    $ docker run --rm -it mydnshost/mydhost-python-api -h
+```
 
 ## Command line
 
