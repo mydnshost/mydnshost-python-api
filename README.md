@@ -21,7 +21,7 @@ Note that this tool requires Python 3.
 To run using docker, simply:
 
 ```
-    $ docker run --rm -it mydnshost/mydhost-python-api -h
+    $ docker run --rm -it mydnshost/mydnshost-python-api -h
 ```
 
 ## Command line
