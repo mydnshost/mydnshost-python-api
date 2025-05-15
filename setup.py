@@ -8,7 +8,7 @@ here = path.abspath(path.dirname(__file__))
 setup(
     name='mydnshost',
 
-    version='0.0.1',
+    version='0.0.2',
 
     description='Command-line tool to interact with the MyDnsHost.co.uk API',
     long_description='Command-line tool that allows updating of DNS records ' \
@@ -34,14 +34,13 @@ setup(
 
     keywords='dns mydnshost',
 
-    py_modules=["api", "cli"],
+    packages=['mydnshost'],
 
     install_requires=["requests[security]"],
 
     entry_points={
         'console_scripts': [
-            'mydnshost=cli:main',
+            'mydnshost=mydnshost.cli:main',
         ],
     },
 )
-

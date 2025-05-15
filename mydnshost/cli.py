@@ -1,7 +1,9 @@
+#!/usr/bin/env python3
+
 import argparse
 import os
 
-from api import MyDNSHostAPI, UserKeyAuthenticator
+from .api import MyDNSHostAPI, UserKeyAuthenticator
 
 
 class BaseHandler:
