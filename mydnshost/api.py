@@ -148,7 +148,7 @@ class MyDNSHostAPI:
 
     def __build_url(self, api_method):
         admin_prefix = 'admin/' if self.__domain_admin and api_method.startswith('domain') else ''
-        return urllib.parse.urljoin(self.__base_url, '%s%s/%s' % (admin_prefix, self.__version, api_method))
+        return urllib.parse.urljoin(self.__base_url, '%s/%s%s' % (self.__version, admin_prefix, api_method))
 
 
 class MyDnsApiException(Exception):
