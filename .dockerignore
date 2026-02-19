@@ -1,7 +1,4 @@
-.git
 .github
 .gitignore
 .gitmodules
 .dockerignore
-*.md
-LICENSE

@@ -1,16 +1,32 @@
-FROM python:3-alpine
+FROM python:3-alpine AS builder
 
 WORKDIR /usr/src/app
 
-COPY requirements.txt ./
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 # Install dependencies for building cryptography package
-RUN apk add libffi-dev openssl-dev build-base
+RUN apk add git libffi-dev openssl-dev build-base && \
+    pip install --upgrade pip && \
+    python -m pip install --upgrade pip build wheel
 
-RUN pip install --no-cache-dir -r requirements.txt
+COPY pyproject.toml pyproject.toml
+COPY mydnshost mydnshost
+COPY .git .git
+COPY README.md README.md
 
-COPY . .
+RUN python -m build && \
+    pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels -r mydnshost/requirements.txt && \
+    pip wheel --no-cache-dir --no-deps --wheel-dir /usr/src/app/wheels dist/*.whl
 
-RUN pip install --no-cache-dir .
+FROM python:3-alpine AS app
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /usr/src/app
+
+COPY --from=builder /usr/src/app/wheels /wheels/
+RUN pip install --no-cache /wheels/*
 
 ENTRYPOINT [ "mydnshost" ]

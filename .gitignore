@@ -1,2 +1,7 @@
 .idea
 *.pyc
+__pycache__/
+dist/
+build/
+*.egg-info/
+mydnshost/_version.py
