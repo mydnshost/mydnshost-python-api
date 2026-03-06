@@ -22,6 +22,8 @@ class MyDNSHostAPI:
         self.__timeout = None
         self.__device_id = None
         self.__device_name = None
+        self.__admin_token = None
+        self.__admin_elevation_required = False
         self.__last_response = None
 
     def set_auth(self, auth: requests.auth.AuthBase):
@@ -67,6 +69,46 @@ class MyDNSHostAPI:
         """
         self.__device_name = device_name
         return self
+
+    def set_admin_token(self, token):
+        """Sets the admin elevation token to send with requests.
+
+        Args:
+            token: The admin token JWT.
+
+        Returns:
+            self for chaining.
+        """
+        self.__admin_token = token
+        return self
+
+    def clear_admin_token(self):
+        """Clears the admin elevation token.
+
+        Returns:
+            self for chaining.
+        """
+        self.__admin_token = None
+        return self
+
+    def is_admin_elevation_required(self):
+        """Checks if admin elevation was required on the last API call.
+
+        Returns:
+            True if the last API response indicated elevation was required.
+        """
+        return self.__admin_elevation_required
+
+    def get_admin_token(self, data):
+        """Requests an admin elevation token.
+
+        Args:
+            data: Verification data, e.g. {'code': '123456'} or {'password': 'secret'}.
+
+        Returns:
+            Response dict with 'admintoken' and 'expires', or error.
+        """
+        return self.__post('session/admintoken', data)
 
     def use_domain_admin(self, domain_admin):
         """
@@ -417,13 +459,13 @@ class MyDNSHostAPI:
         return self.__post('system/jobs/create', data)
 
     def repeat_system_job(self, job_id):
-        return self.__get('system/jobs/%s/repeat' % job_id)
+        return self.__post('system/jobs/%s/repeat' % job_id, {})
 
     def republish_system_job(self, job_id):
-        return self.__get('system/jobs/%s/republish' % job_id)
+        return self.__post('system/jobs/%s/republish' % job_id, {})
 
     def cancel_system_job(self, job_id):
-        return self.__get('system/jobs/%s/cancel' % job_id)
+        return self.__post('system/jobs/%s/cancel' % job_id, {})
 
     def get_system_job_logs(self, job_id):
         return self.__get('system/jobs/%s/logs' % job_id)
@@ -469,6 +511,8 @@ class MyDNSHostAPI:
             extra_headers['X-2FA-DEVICE-ID'] = self.__device_id
         if self.__device_name is not None:
             extra_headers['X-2FA-SAVE-DEVICE'] = self.__device_name
+        if self.__admin_token is not None:
+            extra_headers['X-Admin-Token'] = self.__admin_token
 
         if extra_headers:
             existing = kwargs.get('headers', {})
@@ -477,6 +521,7 @@ class MyDNSHostAPI:
         response = requests.request(method, self.__build_url(api_method), auth=auth, **kwargs).json()
 
         self.__last_response = response
+        self.__admin_elevation_required = response.get('admin_elevation') == 'required'
 
         if 'error' in response:
             raise MyDnsApiException(response.get('error'), response.get('errorData'))
