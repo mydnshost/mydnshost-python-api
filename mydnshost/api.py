@@ -478,6 +478,14 @@ class MyDNSHostAPI:
     def get_system_service_logs(self, service, params=None):
         return self.__get('system/service/%s/logs' % service, params=params)
 
+    # --- System Audit Log ---
+
+    def get_audit_log(self, params=None):
+        return self.__get('system/audit/list', params=params)
+
+    def get_audit_entry(self, entry_id):
+        return self.__get('system/audit/%s' % entry_id)
+
     # --- External / ACME ---
 
     def httpreq_present(self, data):
