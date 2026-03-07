@@ -172,6 +172,30 @@ class MyDNSHostAPI:
         auth = UserPassAuthenticator(user, password, two_fa_push=True)
         return self.__get('session', auth_override=auth)
 
+    def check_2fa_push(self):
+        """Checks if 2FA push is available for the current user.
+
+        Returns:
+            True if the user has a push-capable 2FA key, False otherwise.
+        """
+        result = self.__get('session/2fa_push/check')
+        if result is not None and 'hasPushKey' in result:
+            return result['hasPushKey']
+        return False
+
+    def get_2fa_push_code(self):
+        """Initiates a 2FA push and returns a short-term pushcode on success.
+
+        This call blocks until the push is approved or times out.
+
+        Returns:
+            The pushcode string on success, or None on failure.
+        """
+        result = self.__get('session/2fa_push')
+        if result is not None and 'pushcode' in result:
+            return result['pushcode']
+        return None
+
     # --- User Data ---
 
     def get_user_data(self):
